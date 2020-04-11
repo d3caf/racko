@@ -1,5 +1,5 @@
 defmodule Racko.Game do
-    defstruct deck: [], revealed: nil, players: [], winner: nil
+    defstruct deck: [], revealed: nil, players: [], winner: nil, active_player: nil
 
     alias Racko.{Player, Game}
 
@@ -10,6 +10,18 @@ defmodule Racko.Game do
         |> generate_deck
         |> init_racks(players)
         |> init_revealed
+        |> select_starter
+    end
+
+    def select_starter(%Game{players: players} = game) do
+        %Game{game | active_player: Enum.random(0..Enum.count(players) - 1)}
+    end
+
+    def end_turn(%Game{players: players, active_player: active_player} = game) do
+        case active_player < Enum.count(players) - 1 do
+            true -> %Game{game | active_player: active_player + 1}
+            false -> %Game{game | active_player: 0}
+        end
     end
 
     def generate_deck(%Game{players: players} = game) do
@@ -39,7 +51,7 @@ defmodule Racko.Game do
     def deal_cards_to_player(%Game{players: players} = game, name, amount \\ @rack_size) do
         {player_cards, new_deck} = draw_cards_from_deck(game, amount)
 
-        player_index = get_player_index_by_name(game, name)
+        player_index = Player.get_index_by_name(game, name)
         new_players = List.update_at(players, player_index, &(%Racko.Player{&1 | rack: player_cards}))
 
         %Game{game | deck: new_deck, players: new_players}
@@ -59,20 +71,18 @@ defmodule Racko.Game do
         %Game{game | revealed: card}
     end
 
-    @spec get_player_by_name(Racko.Game.t(), String.t()) :: nil | Racko.Player.t()
-    def get_player_by_name(%Game{players: players}, name) do
-        Enum.find(players, fn p -> p.name == name end)
+    def racko?(%Player{rack: rack}) do
+        compare_fn = fn c, acc ->
+            if c > acc, do: {:cont, acc = c}, else: {:halt, acc = false}
+        end
+
+        !!Enum.reduce_while(rack, 0, compare_fn)
     end
 
-    @spec get_player_index_by_name(Racko.Game.t(), String.t()) :: nil | non_neg_integer
-    def get_player_index_by_name(%Game{players: players}, name) do
-        Enum.find_index(players, fn p -> p.name == name end)
-    end
-
-    def update_player(%Game{players: players} = game, %Player{name: name}, new_player) do
-        player_index = get_player_index_by_name(game, name)
-        new_players = List.update_at(players, player_index, new_player)
-
-        %Game{game | players: new_players}
+    defp assign_winner_if_racko(game, player) do
+        case !!racko?(player) do
+            true -> %{game | winner: player}
+            false -> game
+        end
     end
 end
