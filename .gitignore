@@ -22,3 +22,18 @@ erl_crash.dump
 # Ignore package tarball (built via "mix hex.build").
 racko-*.tar
 
+### Elixir ###
+*.beam
+/config/*.secret.exs
+.elixir_ls/
+
+### VisualStudioCode ###
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+### VisualStudioCode Patch ###
+# Ignore all local history of files
+.history
