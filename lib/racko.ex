@@ -2,17 +2,17 @@ defmodule Racko do
   @moduledoc """
   Documentation for Racko.
   """
+  use Application
 
-  @doc """
-  Hello world.
+  def start(_type, _args) do
+    children = [
+      {Registry, keys: :unique, name: Racko.GameRegistry},
+      Racko.GameSupervisor
+    ]
 
-  ## Examples
+    :ets.new(:games_table, [:public, :named_table])
 
-      iex> Racko.hello()
-      :world
-
-  """
-  def hello do
-    :world
+    opts = [strategy: :one_for_one, name: Racko.Supervisor]
+    Supervisor.start_link(children, opts)
   end
 end

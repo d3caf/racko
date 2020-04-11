@@ -9,6 +9,7 @@ defmodule Racko.Game do
         %Game{players: players}
         |> generate_deck
         |> init_racks(players)
+        |> init_revealed
     end
 
     def generate_deck(%Game{players: players} = game) do
@@ -25,11 +26,21 @@ defmodule Racko.Game do
 
     def init_racks(game, []), do: game
 
-    def deal_cards_to_player(%Game{deck: deck, players: players} = game, name, amount \\ @rack_size) do
-        {player_cards, new_deck} = Enum.split(deck, amount)
+    def init_revealed(game) do
+        {new_revealed, new_deck} = draw_cards_from_deck(game)
 
-        player_index = Enum.find_index(players, fn p -> p.name == name end)
-        new_players = List.update_at(players, player_index, &(%Racko.Player{&1 | rack: player_cards})) 
+        %Game{game | revealed: List.first(new_revealed), deck: new_deck}
+    end
+
+    def draw_cards_from_deck(%Game{deck: deck}, amount \\ 1) do
+        Enum.split(deck, amount)
+    end
+
+    def deal_cards_to_player(%Game{players: players} = game, name, amount \\ @rack_size) do
+        {player_cards, new_deck} = draw_cards_from_deck(game, amount)
+
+        player_index = get_player_index_by_name(game, name)
+        new_players = List.update_at(players, player_index, &(%Racko.Player{&1 | rack: player_cards}))
 
         %Game{game | deck: new_deck, players: new_players}
     end
@@ -42,5 +53,26 @@ defmodule Racko.Game do
         replaced_card = Enum.at(rack, index)
 
         {%Player{player | rack: List.replace_at(rack, index, card)}, replaced_card}
+    end
+
+    def replace_revealed_card(game, card) do
+        %Game{game | revealed: card}
+    end
+
+    @spec get_player_by_name(Racko.Game.t(), String.t()) :: nil | Racko.Player.t()
+    def get_player_by_name(%Game{players: players}, name) do
+        Enum.find(players, fn p -> p.name == name end)
+    end
+
+    @spec get_player_index_by_name(Racko.Game.t(), String.t()) :: nil | non_neg_integer
+    def get_player_index_by_name(%Game{players: players}, name) do
+        Enum.find_index(players, fn p -> p.name == name end)
+    end
+
+    def update_player(%Game{players: players} = game, %Player{name: name}, new_player) do
+        player_index = get_player_index_by_name(game, name)
+        new_players = List.update_at(players, player_index, new_player)
+
+        %Game{game | players: new_players}
     end
 end
