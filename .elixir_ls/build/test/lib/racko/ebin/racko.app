@@ -1,9 +1,0 @@
-{application,racko,
-             [{applications,[kernel,stdlib,elixir,logger]},
-              {description,"racko"},
-              {modules,['Elixir.Racko','Elixir.Racko.Game',
-                        'Elixir.Racko.GameServer',
-                        'Elixir.Racko.GameSupervisor','Elixir.Racko.Player']},
-              {registered,[]},
-              {vsn,"0.1.0"},
-              {mod,{'Elixir.Racko',[]}}]}.
