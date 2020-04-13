@@ -61,7 +61,7 @@ defmodule Racko.LobbyServer do
   def handle_call({:remove_player, %Player{} = player}, _from, lobby) do
     if Enum.count(lobby.players) > 1 do
       new_lobby = lobby
-                  |> Lobby.remove_player(player)
+        |> Lobby.remove_player(player)
 
       {:reply, new_lobby.players, new_lobby, @timeout}
     else

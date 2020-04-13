@@ -5,26 +5,30 @@ defmodule Racko.Player do
     alias Racko.{Player, Game}
 
     def new(name, color) do
-        %Racko.Player{name: name, color: color}
+        %Player{name: name, color: color}
     end
 
     def update(%Game{players: players} = game, %Player{name: name} = new_player) do
-        IO.inspect Map.replace!(players, name, new_player)
         %Game{game | players: Map.replace!(players, name, new_player)}
     end
 
-    # @spec get_by_name(Racko.Game.t(), String.t()) :: nil | Racko.Player.t()
-    # def get_by_name(%Game{players: players}, name) do
-    #     Enum.find(players, fn p -> p.name == name end)
-    # end
-
-    # @spec get_index_by_name(Racko.Game.t(), String.t()) :: nil | non_neg_integer
-    # def get_index_by_name(%Game{players: players}, name) do
-    #     Enum.find_index(players, fn p -> p.name == name end)
-    # end
-
     def put_card_in_hand(player, card) do
         %Player{player | hand: card}
+    end
+
+    def put_hand_in_rack(%Game{} = game, %Player{rack: rack, hand: hand} = player, index) do
+        {new_player, old_card} = place_card_in_rack(player, index, hand)
+
+        game
+            |> update(%Player{new_player| hand: nil})
+            |> Game.replace_revealed_card(old_card)
+    end
+
+    def get_card_from_deck(%Game{} = game, %Player{hand: hand} = player) do
+        {card, new_game} = Game.draw_from_deck(game)
+        new_player = put_card_in_hand(player, card)
+
+        update(game, new_player)
     end
 
     @doc """

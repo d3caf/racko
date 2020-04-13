@@ -24,6 +24,10 @@ defmodule Racko.GameServer do
     GenServer.call(via_tuple(name), {:draw_revealed_card, player})
   end
 
+  def put_hand_in_rack(name, %Player{} = player, index) do
+    GenServer.call(via_tuple(name), {:put_hand_in_rack, player, index})
+  end
+
   def get_game(name) do
     GenServer.call(via_tuple(name), {:get_game})
   end
@@ -73,8 +77,9 @@ defmodule Racko.GameServer do
     {:reply, new_game, new_game, @timeout}
   end
 
-  def handle_call({:put_in_rack, %Player{name: name}}, _from, game) do
-    {:reply, :ok, game, @timeout}
+  def handle_call({:put_hand_in_rack, %Player{} = player, index}, _from, game) do
+    new_game = Player.put_hand_in_rack(game, player, index)
+    {:reply, :ok, new_game, @timeout}
   end
 
   # def handle_call({:draw_revealed_card, player}, _from, game) do

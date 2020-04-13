@@ -1,7 +1,7 @@
 defmodule Racko.Lobby do
   defstruct [players: []]
 
-  alias Racko.{Lobby, Player}
+  alias Racko.{Lobby, Player, Game}
 
   @doc """
   Creates a new Lobby
