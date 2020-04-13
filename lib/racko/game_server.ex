@@ -12,7 +12,7 @@ defmodule Racko.GameServer do
     GenServer.start_link(__MODULE__, {name, players}, name: via_tuple(name))
   end
 
-  def via_tuple(name) do
+  defp via_tuple(name) do
     {:via, Registry, {Racko.GameRegistry, name}}
   end
 

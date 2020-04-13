@@ -7,10 +7,13 @@ defmodule Racko do
   def start(_type, _args) do
     children = [
       {Registry, keys: :unique, name: Racko.GameRegistry},
-      Racko.GameSupervisor
+      {Registry, keys: :unique, name: Racko.LobbyRegistry},
+      Racko.GameSupervisor,
+      Racko.LobbySupervisor
     ]
 
     :ets.new(:games_table, [:public, :named_table])
+    :ets.new(:lobbies_table, [:public, :named_table])
 
     opts = [strategy: :one_for_one, name: Racko.Supervisor]
     Supervisor.start_link(children, opts)
