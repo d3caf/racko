@@ -8,12 +8,24 @@ defmodule Racko.GameServer do
   @timeout :timer.hours(1)
 
   # Client -----
-  def start_link(name, players) do
-    GenServer.start_link(__MODULE__, {name, players}, name: via_tuple(name))
+  def start_link(name, owner) do
+    GenServer.start_link(__MODULE__, {name, owner}, name: via_tuple(name))
   end
 
   defp via_tuple(name) do
     {:via, Registry, {Racko.GameRegistry, name}}
+  end
+
+  def add_player(name, %Player{} = player) do
+    GenServer.call(via_tuple(name), {:add_player, player})
+  end
+
+  def get_player(name, player_name) do
+    GenServer.call(via_tuple(name), {:get_player, player_name})
+  end
+
+  def start_game(name) do
+    GenServer.call(via_tuple(name), {:start_game})
   end
 
   def draw_from_deck(name, %Player{} = player) do
@@ -33,15 +45,16 @@ defmodule Racko.GameServer do
   end
 
   # Server -----
-  def init({name, players}) do
+  def init({name, owner}) do
     game =
       case :ets.lookup(:games_table, name) do
         [] ->
-          game = Game.new(players)
+          game = Game.new(owner)
           :ets.insert(:games_table, {name, game})
           game
 
-        [{^name, game}] -> game
+        [{^name, game}] ->
+          game
       end
 
     Logger.info("Started a new Racko game called #{name}.")
@@ -52,7 +65,33 @@ defmodule Racko.GameServer do
   def game_pid(name) do
     name
     |> via_tuple
-    |> GenServer.whereis
+    |> GenServer.whereis()
+  end
+
+  def handle_call(
+        {:add_player, %Player{name: name} = player},
+        _from,
+        %Game{players: players} = game
+      ) do
+    case joinable?(game) do
+      {:error, message} ->
+        {:reply, {:error, message}, game}
+
+      true ->
+        if Map.has_key?(players, name) do
+          {:reply, {:error, "A player already exists named #{name}"}, game, @timeout}
+        else
+          {:reply, :ok, game |> Game.add_player(player), @timeout}
+        end
+    end
+  end
+
+  def handle_call({:get_player, player_name}, _from, game) do
+    {:reply, game.players[player_name], game}
+  end
+
+  def handle_call({:start_game}, _from, game) do
+    {:reply, :ok, game |> Game.start(), @timeout}
   end
 
   def handle_call({:get_game}, _from, game) do
@@ -106,7 +145,14 @@ defmodule Racko.GameServer do
   end
 
   defp my_game_name() do
-    Registry.keys(Racko.GameRegistry, self()) |> List.first
+    Registry.keys(Racko.GameRegistry, self()) |> List.first()
   end
 
+  defp joinable?(%Game{players: players, started: started}) do
+    cond do
+      started -> {:error, "Game is already started!"}
+      Enum.count(players) > 3 -> {:error, "Table is full!"}
+      true -> true
+    end
+  end
 end

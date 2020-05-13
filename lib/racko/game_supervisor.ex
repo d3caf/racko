@@ -10,10 +10,10 @@ defmodule Racko.GameSupervisor do
     DynamicSupervisor.init(strategy: :one_for_one)
   end
 
-  def start_game(name, players) do
+  def new_game(name, owner) do
     child_spec = %{
       id: GameServer,
-      start: {GameServer, :start_link, [name, players]},
+      start: {GameServer, :start_link, [name, owner]},
       restart: :transient
     }
 
