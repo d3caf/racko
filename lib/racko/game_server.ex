@@ -40,6 +40,10 @@ defmodule Racko.GameServer do
     GenServer.call(via_tuple(name), {:put_hand_in_rack, player, index})
   end
 
+  def end_turn(name) do
+    GenServer.call(via_tuple(name), {:end_turn})
+  end
+
   def get_game(name) do
     GenServer.call(via_tuple(name), {:get_game})
   end
@@ -107,6 +111,15 @@ defmodule Racko.GameServer do
   #   {:reply, new_game, new_game, @timeout}
   # end
 
+  def handle_call({:draw_revealed_card, %Player{} = player}, _from, game) do
+    {card, new_game} = Game.draw_revealed(game)
+
+    new_player = Player.put_card_in_hand(player, card)
+    new_game = Player.update(new_game, new_player)
+
+    {:reply, new_game, new_game, @timeout}
+  end
+
   def handle_call({:draw_from_deck, %Player{} = player}, _from, game) do
     {[card | _], new_game} = Game.draw_from_deck(game)
 
@@ -118,7 +131,7 @@ defmodule Racko.GameServer do
 
   def handle_call({:put_hand_in_rack, %Player{} = player, index}, _from, game) do
     new_game = Player.put_hand_in_rack(game, player, index)
-    {:reply, :ok, new_game, @timeout}
+    {:reply, new_game, new_game, @timeout}
   end
 
   # def handle_call({:draw_revealed_card, player}, _from, game) do
@@ -130,6 +143,11 @@ defmodule Racko.GameServer do
 
   #     {:reply, new_game, new_game, @timeout}
   # end
+
+  def handle_call({:end_turn}, _from, game) do
+    new_game = Game.end_turn(game)
+    {:reply, new_game, new_game, @timeout}
+  end
 
   def handle_info(:timeout, game) do
     {:stop, {:shutdown, :timeout}, game}

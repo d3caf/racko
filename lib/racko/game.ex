@@ -89,11 +89,17 @@ defmodule Racko.Game do
         %Game{game | active_player: Map.keys(players) |> List.first()}
 
       false ->
+        # Ths is ugly. Find the index of the active player and add 1 to it to get the next player.
+        new_active_player =
+          Enum.at(
+            players,
+            Enum.find_index(players, fn {name, _} -> name == active_player end) + 1
+          )
+          |> elem(0)
+
         %Game{
           game
-          | active_player:
-              Map.keys(players)
-              |> List.at(List.find_index(players, &(&1 == active_player)) + 1)
+          | active_player: new_active_player
         }
     end
   end
