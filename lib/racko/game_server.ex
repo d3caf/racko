@@ -102,15 +102,6 @@ defmodule Racko.GameServer do
     {:reply, game, game}
   end
 
-  # TODO refactor
-  # def handle_call({:draw_revealed_card, %Player{name: name}}, _from, game) do
-  #   {revealed, %Game{players: players} = game} = Game.draw_revealed(game)
-
-  #   new_game = %Game{game | players: put_in(players, [name, :hand], revealed)}
-
-  #   {:reply, new_game, new_game, @timeout}
-  # end
-
   def handle_call({:draw_revealed_card, %Player{} = player}, _from, game) do
     {card, new_game} = Game.draw_revealed(game)
 
@@ -130,7 +121,10 @@ defmodule Racko.GameServer do
   end
 
   def handle_call({:put_hand_in_rack, %Player{} = player, index}, _from, game) do
-    new_game = Player.put_hand_in_rack(game, player, index)
+    new_game =
+      Player.put_hand_in_rack(game, player, index)
+      |> Game.assign_winner_if_racko(player)
+
     {:reply, new_game, new_game, @timeout}
   end
 

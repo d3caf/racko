@@ -1,6 +1,6 @@
 defmodule Racko.Game do
   defstruct deck: [],
-            revealed: nil,
+            revealed: [],
             players: %{},
             winner: nil,
             active_player: nil,
@@ -52,7 +52,7 @@ defmodule Racko.Game do
   defp init_revealed(game) do
     {[new_revealed | _], %Game{deck: new_deck}} = draw_from_deck(game)
 
-    %Game{game | revealed: new_revealed, deck: new_deck}
+    %Game{game | revealed: [new_revealed], deck: new_deck}
   end
 
   defp select_starter(%Game{players: players} = game) do
@@ -75,15 +75,21 @@ defmodule Racko.Game do
   end
 
   @spec draw_revealed(Racko.Game.t()) :: {integer, Racko.Game.t()}
-  def draw_revealed(%Game{revealed: revealed} = game) do
-    {revealed, %Game{game | revealed: nil}}
+  def draw_revealed(%Game{revealed: [top | tail]} = game) do
+    {top, %Game{game | revealed: tail}}
   end
 
-  def replace_revealed_card(game, card) do
-    %Game{game | revealed: card}
+  def replace_revealed_card(%Game{revealed: revealed} = game, card) do
+    %Game{game | revealed: [card | revealed]}
   end
 
-  def end_turn(%Game{players: players, active_player: active_player} = game) do
+  def end_turn(%Game{} = game) do
+    game
+    |> maybe_reshuffle_deck
+    |> advance_turn
+  end
+
+  defp advance_turn(%Game{players: players, active_player: active_player} = game) do
     case Map.keys(players) |> List.last() == active_player do
       true ->
         %Game{game | active_player: Map.keys(players) |> List.first()}
@@ -104,6 +110,14 @@ defmodule Racko.Game do
     end
   end
 
+  defp maybe_reshuffle_deck(%Game{revealed: revealed, deck: []} = game) do
+    game
+    |> Map.put(:deck, Enum.shuffle(revealed))
+    |> init_revealed
+  end
+
+  defp maybe_reshuffle_deck(%Game{} = game), do: game
+
   ## End game ---------
   def racko?(%Player{rack: rack}) do
     compare_fn = fn c, acc ->
@@ -113,9 +127,9 @@ defmodule Racko.Game do
     !!Enum.reduce_while(rack, 0, compare_fn)
   end
 
-  defp assign_winner_if_racko(game, player) do
-    case !!racko?(player) do
-      true -> %{game | winner: player}
+  def assign_winner_if_racko(game, %Player{name: name}) do
+    case !!racko?(Map.get(game.players, name)) do
+      true -> %{game | winner: Map.get(game.players, name)}
       false -> game
     end
   end
