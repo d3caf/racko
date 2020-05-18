@@ -12,6 +12,13 @@ defmodule Racko.GameServer do
     GenServer.start_link(__MODULE__, {name, owner}, name: via_tuple(name))
   end
 
+  def valid_game?(name) do
+    case :ets.lookup(:games_table, name) do
+      [] -> false
+      _ -> true
+    end
+  end
+
   defp via_tuple(name) do
     {:via, Registry, {Racko.GameRegistry, name}}
   end
