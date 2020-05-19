@@ -11,7 +11,6 @@ defmodule Racko.Game do
 
   @rack_size 10
 
-  @spec new(Racko.Player.t()) :: Racko.Game.t()
   def new(owner) do
     %Game{}
     |> Map.put(:players, %{owner.name => owner})
@@ -67,14 +66,12 @@ defmodule Racko.Game do
   end
 
   ## Actions ------------
-  @spec draw_from_deck(Racko.Game.t(), integer) :: {[integer], Racko.Game.t()}
   def draw_from_deck(%Game{deck: deck} = game, amount \\ 1) do
     {cards, new_deck} = Enum.split(deck, amount)
 
     {cards, %Game{game | deck: new_deck}}
   end
 
-  @spec draw_revealed(Racko.Game.t()) :: {integer, Racko.Game.t()}
   def draw_revealed(%Game{revealed: [top | tail]} = game) do
     {top, %Game{game | revealed: tail}}
   end
