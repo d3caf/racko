@@ -121,7 +121,7 @@ defmodule Racko.Game do
   ## End game ---------
   def racko?(%Player{rack: rack}) do
     compare_fn = fn c, acc ->
-      if c > acc, do: {:cont, acc = c}, else: {:halt, acc = false}
+      if c > acc, do: {:cont, c}, else: {:halt, false}
     end
 
     !!Enum.reduce_while(rack, 0, compare_fn)

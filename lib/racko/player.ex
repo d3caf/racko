@@ -16,7 +16,7 @@ defmodule Racko.Player do
     %Player{player | hand: card}
   end
 
-  def put_hand_in_rack(%Game{} = game, %Player{rack: rack, hand: hand} = player, index) do
+  def put_hand_in_rack(%Game{} = game, %Player{hand: hand} = player, index) do
     {new_player, old_card} = place_card_in_rack(player, index, hand)
 
     game
@@ -30,8 +30,8 @@ defmodule Racko.Player do
     |> update(%Player{player | hand: nil})
   end
 
-  def get_card_from_deck(%Game{} = game, %Player{hand: hand} = player) do
-    {card, new_game} = Game.draw_from_deck(game)
+  def get_card_from_deck(%Game{} = game, %Player{} = player) do
+    {card, _new_game} = Game.draw_from_deck(game)
     new_player = put_card_in_hand(player, card)
 
     update(game, new_player)
