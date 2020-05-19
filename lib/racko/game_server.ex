@@ -31,6 +31,10 @@ defmodule Racko.GameServer do
     GenServer.call(via_tuple(name), {:get_player, player_name})
   end
 
+  def get_owner(name) do
+    GenServer.call(via_tuple(name), {:get_owner})
+  end
+
   def start_game(name) do
     GenServer.call(via_tuple(name), {:start_game})
   end
@@ -103,6 +107,10 @@ defmodule Racko.GameServer do
 
   def handle_call({:get_player, player_name}, _from, game) do
     {:reply, game.players[player_name], game}
+  end
+
+  def handle_call({:get_owner}, _from, game) do
+    {:reply, game.owner, game}
   end
 
   def handle_call({:start_game}, _from, game) do
