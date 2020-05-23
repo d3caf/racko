@@ -94,11 +94,11 @@ defmodule Racko.GameServer do
       ) do
     case joinable?(game) do
       {:error, message} ->
-        {:reply, {:error, message}, game}
+        {:reply, {:error, :unjoinable, message}, game}
 
       true ->
         if Map.has_key?(players, name) do
-          {:reply, {:error, "A player already exists named #{name}"}, game, @timeout}
+          {:reply, {:error, :player_exists, "A player already exists named #{name}"}, game, @timeout}
         else
           {:reply, :ok, game |> Game.add_player(player), @timeout}
         end
