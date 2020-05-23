@@ -98,7 +98,8 @@ defmodule Racko.GameServer do
 
       true ->
         if Map.has_key?(players, name) do
-          {:reply, {:error, :player_exists, "A player already exists named #{name}"}, game, @timeout}
+          {:reply, {:error, :player_exists, "A player already exists named #{name}"}, game,
+           @timeout}
         else
           {:reply, :ok, game |> Game.add_player(player), @timeout}
         end
@@ -178,7 +179,7 @@ defmodule Racko.GameServer do
   defp joinable?(%Game{players: players, started: started}) do
     cond do
       started -> {:error, "Game is already started!"}
-      Enum.count(players) > 3 -> {:error, "Table is full!"}
+      Enum.count(players) > 4 -> {:error, "Table is full!"}
       true -> true
     end
   end
